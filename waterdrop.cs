@@ -158,7 +158,8 @@ class LsdFluid : Form
     // ==================== FINITE-DIFFERENCE WAVE PROPAGATION ====================
     private void UpdateWaves()
     {
-        const float damping = 0.992f;
+        const float damping = 0.985f;   // tighter than 0.992 — bleeds energy faster
+        const float clamp   = 24f;      // hard ceiling on wave amplitude
 
         for (int y = 1; y < bitmapHeight - 1; y++)
         for (int x = 1; x < bitmapWidth - 1; x++)
@@ -174,6 +175,10 @@ class LsdFluid : Form
             waveNext[x, y] +=
                 (wave[x - 1, y] + wave[x + 1, y] +
                  wave[x, y - 1] + wave[x, y + 1]) * 0.003f;
+
+            // Hard clamp — prevents NaN/overflow runaway
+            if (waveNext[x, y] >  clamp) waveNext[x, y] =  clamp;
+            if (waveNext[x, y] < -clamp) waveNext[x, y] = -clamp;
         }
 
         // Triple-buffer swap — no allocation per frame
